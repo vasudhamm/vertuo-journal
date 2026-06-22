@@ -354,8 +354,85 @@
   @media (max-width: 680px) {
     .layout { grid-template-columns: 1fr; }
     aside { display: none; }
-    main { padding: 1rem; }
+    main { padding: 0.875rem 0.875rem 5rem; }
     .hdr-stats { display: none; }
+    .pods-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .toolbar { gap: 8px; }
+    .search-wrap { min-width: 0; }
+  }
+
+  /* ── Mobile bottom bar ── */
+  .mob-bar {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1c1410; z-index: 300;
+    padding: 0 0 env(safe-area-inset-bottom);
+  }
+  .mob-bar-inner {
+    display: flex; align-items: center;
+    padding: 0 1rem; height: 52px; gap: 8px;
+  }
+  .mob-filter-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.12); border: none;
+    color: #fff; padding: 7px 14px; border-radius: 20px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .mob-filter-btn:active { opacity: 0.7; }
+  .mob-add-btn {
+    margin-left: auto; background: #c9821e; border: none;
+    color: #fff; width: 36px; height: 36px; border-radius: 50%;
+    font-size: 22px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+    font-family: inherit; line-height: 1;
+  }
+  .mob-active-filter {
+    font-size: 11px; color: rgba(255,255,255,0.55);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 120px;
+  }
+
+  /* ── Filter sheet ── */
+  .sheet-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 400;
+  }
+  .sheet-overlay.open { display: block; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: #fff; border-radius: 16px 16px 0 0;
+    z-index: 401; max-height: 80vh; overflow-y: auto;
+    padding: 0 0 env(safe-area-inset-bottom);
+    transform: translateY(100%); transition: transform 0.25s ease;
+  }
+  .sheet-overlay.open .sheet { transform: translateY(0); }
+  .sheet-handle {
+    width: 36px; height: 4px; background: #ddd4c5;
+    border-radius: 2px; margin: 12px auto 4px;
+  }
+  .sheet-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: #7a6a57;
+    padding: 10px 16px 6px;
+  }
+  .sheet-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 11px 16px;
+    border: none; background: transparent;
+    font-size: 15px; color: #1c1410;
+    cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .sheet-btn:active { background: #f7f3ee; }
+  .sheet-btn.active { color: #c9821e; font-weight: 600; }
+  .sheet-btn.active .fd { outline: 2px solid #c9821e; }
+  .sheet-sep { height: 1px; background: #f0e8da; margin: 4px 0; }
+  .sheet-count { margin-left: auto; font-size: 12px; color: #7a6a57; }
+
+  @media (max-width: 680px) {
+    .mob-bar { display: block; }
+    .toolbar .view-toggle,
+    .toolbar select.ctrl { display: none; }
   }
 
 </style>
@@ -1009,11 +1086,83 @@ function updatePicker(pickerId, val, attr) {
   });
 }
 
-window.setFilter = f => { currentFilter = f; render(); };
+window.setFilter = f => { currentFilter = f; render(); updateMobLabel(); };
 document.getElementById("search").oninput = e => { searchQuery = e.target.value; renderPods(); };
 document.getElementById("sort").onchange  = e => { currentSort = e.target.value; renderPods(); };
 document.getElementById("vg").onclick = () => { currentView="grid"; document.getElementById("vg").classList.add("active"); document.getElementById("vl").classList.remove("active"); renderPods(); };
 document.getElementById("vl").onclick = () => { currentView="list"; document.getElementById("vl").classList.add("active"); document.getElementById("vg").classList.remove("active"); renderPods(); };
+
+
+// ── Mobile filter sheet ────────────────────────────────────────────────────
+function openSheet() {
+  renderSheet();
+  document.getElementById("sheet-overlay").classList.add("open");
+}
+function closeSheet() {
+  document.getElementById("sheet-overlay").classList.remove("open");
+}
+
+function renderSheet() {
+  const pods = allPods();
+  const cnt = f => {
+    if (f==="all")      return pods.length;
+    if (f==="tried")    return pods.filter(p=>ratings[p.id]).length;
+    if (f==="untried")  return pods.filter(p=>!ratings[p.id]).length;
+    if (f==="seasonal") return pods.filter(p=>p.seasonal||p.roast==="seasonal").length;
+    if (f==="custom")   return Object.keys(customPods).length;
+    if (f.startsWith("roast:"))  return pods.filter(p=>p.roast===f.slice(6)).length;
+    if (f.startsWith("size:"))   return pods.filter(p=>p.size===f.slice(5)).length;
+    if (f.startsWith("rated:"))  return pods.filter(p=>ratings[p.id]?.rating==parseInt(f.slice(6))).length;
+    return 0;
+  };
+
+  const btn = (f, label, dot) => {
+    const active = currentFilter === f;
+    return `<button class="sheet-btn${active?" active":""}" onclick="sheetFilter('${f}')">
+      ${dot ? `<span class="fd" style="background:${dot};width:10px;height:10px;border-radius:50%;flex-shrink:0"></span>` : ""}
+      ${label}
+      <span class="sheet-count">${cnt(f)}</span>
+    </button>`;
+  };
+
+  document.getElementById("sheet-content").innerHTML = `
+    <div class="sheet-title">Status</div>
+    ${btn("all","All pods")}
+    ${btn("tried","Tried")}
+    ${btn("untried","Not tried yet")}
+    <div class="sheet-sep"></div>
+    <div class="sheet-title">Roast</div>
+    ${["medium","light","dark","flavoured","decaf","seasonal"].map(r => btn("roast:"+r, ROAST[r].label, ROAST[r].dot)).join("")}
+    <div class="sheet-sep"></div>
+    <div class="sheet-title">Cup size</div>
+    ${SIZE_ORDER.map(s => btn("size:"+s, s.split(" (")[0])).join("")}
+    <div class="sheet-sep"></div>
+    <div class="sheet-title">My ratings</div>
+    ${[5,4,3,2,1].map(n => btn("rated:"+n, "★".repeat(n)+"☆".repeat(5-n))).join("")}
+    <div class="sheet-sep"></div>
+    ${btn("custom","My additions", ROAST.custom.dot)}
+  `;
+}
+
+window.sheetFilter = f => {
+  setFilter(f);
+  closeSheet();
+  updateMobLabel();
+};
+
+function updateMobLabel() {
+  const el = document.getElementById("mob-active-label");
+  if (!el) return;
+  const labels = {
+    "all":"All pods","tried":"Tried","untried":"Not tried yet",
+    "seasonal":"Seasonal","custom":"My additions"
+  };
+  let label = labels[currentFilter];
+  if (!label && currentFilter.startsWith("roast:"))  label = ROAST[currentFilter.slice(6)]?.label || currentFilter.slice(6);
+  if (!label && currentFilter.startsWith("size:"))   label = currentFilter.slice(5).split(" (")[0];
+  if (!label && currentFilter.startsWith("rated:"))  label = "★".repeat(parseInt(currentFilter.slice(6)));
+  el.textContent = label || "All pods";
+}
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -1021,5 +1170,32 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2200);
 }
 </script>
+
+<!-- Mobile bottom bar -->
+<div class="mob-bar">
+  <div class="mob-bar-inner">
+    <button class="mob-filter-btn" onclick="openSheet()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <line x1="1" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="1" y1="9" x2="13" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="4" cy="4" r="2" fill="#1c1410" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="10" cy="9" r="2" fill="#1c1410" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      Filter
+    </button>
+    <span class="mob-active-filter" id="mob-active-label">All pods</span>
+    <button class="mob-add-btn" onclick="openAddModal()" aria-label="Add a pod">+</button>
+  </div>
+</div>
+
+<!-- Filter sheet -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div id="sheet-content"></div>
+    <div style="height:12px"></div>
+  </div>
+</div>
+
 </body>
 </html>
