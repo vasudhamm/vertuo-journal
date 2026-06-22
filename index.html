@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vertuo Journal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f7f3ee;
+    color: #1c1410;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: #1c1410;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    color: #fff; font-size: 16px; font-weight: 600; letter-spacing: -0.2px;
+  }
+  .hdr-stats {
+    display: flex; gap: 20px;
+    font-size: 13px; color: rgba(255,255,255,0.5);
+  }
+  .hdr-stats b { color: #fff; font-weight: 600; }
+
+  /* ── Layout ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 252px 1fr;
+    min-height: calc(100vh - 56px);
+    align-items: start;
+  }
+
+  /* ── Sidebar ── */
+  aside {
+    background: #faf6f0;
+    border-right: 1px solid #ddd4c5;
+    padding: 1.25rem 0.875rem;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 1.1rem; }
+  .sidebar-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #7a6a57;
+    padding: 0 0.5rem; margin-bottom: 4px; display: block;
+  }
+  .filt {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 7px 10px;
+    border: none; background: transparent; border-radius: 7px;
+    font-size: 13px; color: #3b2314;
+    cursor: pointer; text-align: left; transition: background 0.12s;
+    font-family: inherit;
+  }
+  .filt:hover { background: #f0e8da; }
+  .filt.active { background: #1c1410; color: #fff; }
+  .filt.active .fc { color: rgba(255,255,255,0.45); }
+  .fd { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .fc { margin-left: auto; font-size: 11px; color: #7a6a57; }
+  .sep { height: 1px; background: #ddd4c5; margin: 0.9rem 0.5rem; }
+  .add-btn {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 8px 10px; margin-top: 6px;
+    border: 1.5px dashed #ddd4c5; background: transparent;
+    border-radius: 7px; font-size: 13px; color: #c9821e;
+    cursor: pointer; text-align: left; transition: all 0.12s;
+    font-family: inherit;
+  }
+  .add-btn:hover { background: #f0e8da; border-color: #c9821e; }
+
+  /* ── Main / Toolbar ── */
+  main { padding: 1.5rem; min-width: 0; }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 180px; }
+  .search-wrap input {
+    width: 100%; padding: 8px 12px 8px 34px;
+    border: 1px solid #ddd4c5; border-radius: 7px;
+    background: #fff; font-size: 13px; color: #1c1410;
+    outline: none; transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  .search-wrap input:focus { border-color: #c9821e; }
+  .search-icon {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%); font-size: 15px; color: #7a6a57;
+    pointer-events: none; line-height: 1;
+  }
+  .ctrl {
+    padding: 8px 10px; border: 1px solid #ddd4c5;
+    border-radius: 7px; background: #fff; font-size: 13px;
+    color: #1c1410; outline: none; cursor: pointer; font-family: inherit;
+  }
+  .view-toggle { display: flex; border: 1px solid #ddd4c5; border-radius: 7px; overflow: hidden; background: #fff; }
+  .vbtn { padding: 7px 11px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: #7a6a57; font-family: inherit; }
+  .vbtn.active { background: #1c1410; color: #fff; }
+
+  /* ── Grid / List containers ── */
+  .pods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .pods-list { display: flex; flex-direction: column; gap: 6px; }
+
+  /* ── Pod Card (grid) ── */
+  .pod-card {
+    background: #fff;
+    border: 1px solid #ddd4c5;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.14s, box-shadow 0.14s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .pod-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(28,20,16,0.1); }
+  .pod-card.custom-pod { border-style: dashed; }
+
+  .card-top {
+    height: 52px;
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 0 12px 8px;
+  }
+  .card-int-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: rgba(0,0,0,0.15);
+  }
+  .card-int-fill { height: 100%; }
+  .card-icon {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(0,0,0,0.2); border: 1.5px solid rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; line-height: 1; position: relative; z-index: 1;
+  }
+  .ltd-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,255,255,0.92); color: #8b1a2a;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 20px; line-height: 1.4;
+  }
+
+  .card-body { padding: 11px 12px 12px; flex: 1; display: flex; flex-direction: column; }
+  .size-tag {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; padding: 2px 7px;
+    border-radius: 20px; margin-bottom: 7px; line-height: 1.5;
+    white-space: nowrap;
+  }
+  .pod-name { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; }
+  .pod-desc { font-size: 11px; color: #7a6a57; margin-bottom: 9px; line-height: 1.4; flex: 1; }
+  .rating-row { display: flex; align-items: center; gap: 5px; }
+  .stars { display: flex; gap: 2px; flex-shrink: 0; }
+  .st { font-size: 12px; color: #ddd; line-height: 1; }
+  .st.on { color: #c9821e; }
+  .tried-tag { font-size: 10px; font-weight: 600; color: #c9821e; margin-left: auto; white-space: nowrap; }
+  .untried-tag { font-size: 10px; color: #7a6a57; margin-left: auto; white-space: nowrap; }
+
+  /* ── Pod Row (list) ── */
+  .pod-row {
+    background: #fff; border: 1px solid #ddd4c5; border-radius: 8px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: background 0.12s;
+  }
+  .pod-row:hover { background: #f7f3ee; }
+  .pod-row.custom-pod { border-style: dashed; }
+  .row-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .row-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-badge { font-size: 10px; font-weight: 700; color: #c03050; flex-shrink: 0; }
+  .row-cat { font-size: 11px; color: #7a6a57; width: 80px; flex-shrink: 0; }
+  .row-size { font-size: 11px; color: #7a6a57; width: 84px; flex-shrink: 0; }
+  .row-int { font-size: 11px; color: #7a6a57; width: 52px; flex-shrink: 0; text-align: right; }
+  .row-stars { display: flex; gap: 2px; flex-shrink: 0; }
+  .row-stars .st { font-size: 11px; }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 4rem 2rem; color: #7a6a57; }
+  .empty-ico { font-size: 2.5rem; opacity: 0.25; margin-bottom: 1rem; }
+
+  /* ── Overlay / Modal ── */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(28,20,16,0.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 1rem;
+    opacity: 0; pointer-events: none; transition: opacity 0.18s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 440px;
+    transform: translateY(8px); transition: transform 0.18s;
+    max-height: 90vh; overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .overlay.open .modal { transform: translateY(0); }
+
+  /* Rate modal header */
+  .mhdr {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid #ddd4c5;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .mhdr-accent { height: 3px; border-radius: 2px; margin-bottom: 14px; }
+  .mhdr-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; padding-right: 36px; }
+  .mhdr-meta { font-size: 12px; color: #7a6a57; line-height: 1.5; padding-right: 36px; }
+  .mclose {
+    position: absolute; top: 14px; right: 14px;
+    background: #f7f3ee; border: none; width: 30px; height: 30px;
+    border-radius: 50%; font-size: 15px; cursor: pointer; color: #7a6a57;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .mclose:hover { background: #f0e8da; }
+
+  /* Add modal header */
+  .ahdr {
+    background: #f0e8da;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid #ddd4c5;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .ahdr-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; padding-right: 36px; }
+  .ahdr-sub { font-size: 12px; color: #7a6a57; }
+
+  /* Modal body */
+  .mbody { padding: 18px 20px 22px; }
+
+  /* Previous entry */
+  .prev-entry {
+    background: #f7f3ee; border: 1px solid #ddd4c5; border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 16px; font-size: 12px;
+  }
+  .prev-lbl { color: #7a6a57; margin-bottom: 5px; }
+  .prev-stars { display: flex; gap: 2px; margin-bottom: 4px; }
+  .prev-stars .st { font-size: 13px; }
+  .prev-note { font-style: italic; color: #1c1410; }
+
+  /* Form fields */
+  .flbl {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: #7a6a57;
+    margin-bottom: 6px; display: block;
+  }
+  .spicker { display: flex; gap: 6px; margin-bottom: 5px; }
+  .sp {
+    background: none; border: none; font-size: 26px; cursor: pointer;
+    color: #ddd; transition: color 0.1s, transform 0.1s; padding: 0; line-height: 1;
+  }
+  .sp.on { color: #c9821e; }
+  .sp:hover { transform: scale(1.15); }
+  .rhint { font-size: 12px; color: #7a6a57; min-height: 16px; margin-bottom: 16px; line-height: 1.4; }
+
+  .finput, .fselect, .ftextarea {
+    width: 100%; padding: 9px 11px;
+    border: 1px solid #ddd4c5; border-radius: 7px;
+    font-size: 13px; font-family: inherit; color: #1c1410;
+    outline: none; transition: border-color 0.15s; background: #fff;
+  }
+  .finput:focus, .fselect:focus, .ftextarea:focus { border-color: #c9821e; }
+  .ftextarea { resize: vertical; min-height: 70px; }
+  .fselect { cursor: pointer; }
+
+  .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .fcol { display: flex; flex-direction: column; gap: 6px; }
+
+  .mactions { display: flex; gap: 8px; margin-top: 18px; }
+  .btn-pri {
+    flex: 1; padding: 10px; background: #1c1410; color: #fff;
+    border: none; border-radius: 7px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s; font-family: inherit;
+  }
+  .btn-pri:hover { opacity: 0.82; }
+  .btn-sec {
+    padding: 10px 14px; background: transparent; color: #7a6a57;
+    border: 1px solid #ddd4c5; border-radius: 7px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .btn-sec:hover { background: #f7f3ee; }
+  .btn-del {
+    padding: 10px 14px; background: transparent; color: #c03050;
+    border: 1px solid #f0c0c8; border-radius: 7px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .btn-del:hover { background: #fce8ec; }
+
+  /* Delete confirm banner inside modal */
+  .del-confirm {
+    background: #fce8ec; border: 1px solid #f0c0c8; border-radius: 8px;
+    padding: 12px; margin-top: 14px; display: none;
+  }
+  .del-confirm.show { display: block; }
+  .del-confirm p { font-size: 13px; color: #8b1a2a; margin-bottom: 10px; }
+  .del-confirm-btns { display: flex; gap: 8px; }
+  .btn-confirm-del {
+    padding: 8px 14px; background: #c03050; color: #fff;
+    border: none; border-radius: 6px; font-size: 13px;
+    cursor: pointer; font-family: inherit; font-weight: 600;
+  }
+  .btn-confirm-del:hover { background: #a02040; }
+  .btn-confirm-cancel {
+    padding: 8px 14px; background: transparent; color: #7a6a57;
+    border: 1px solid #ddd4c5; border-radius: 6px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 1.75rem; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: #1c1410; color: #fff;
+    padding: 9px 20px; border-radius: 100px;
+    font-size: 13px; opacity: 0; transition: opacity 0.2s, transform 0.2s;
+    z-index: 9999; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Loading */
+  #loading {
+    display: flex; align-items: center; justify-content: center;
+    min-height: calc(100vh - 56px); font-size: 13px; color: #7a6a57; gap: 10px;
+  }
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid #ddd4c5;
+    border-top-color: #c9821e; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { display: none; }
+    main { padding: 1rem; }
+    .hdr-stats { display: none; }
+  }
+
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="9" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+      <circle cx="10" cy="10" r="5" fill="#c9821e"/>
+      <circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.8)"/>
+    </svg>
+    Vertuo Journal
+  </div>
+  <div class="hdr-stats">
+    <span><b id="s-tried">0</b> tried</span>
+    <span><b id="s-total">0</b> pods</span>
+    <span>avg <b id="s-avg">—</b></span>
+  </div>
+</header>
+
+<div id="loading"><div class="spinner"></div> Loading…</div>
+
+<div class="layout" id="app" style="display:none">
+  <aside id="sidebar"></aside>
+  <main>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="search" type="text" placeholder="Search pods…">
+      </div>
+      <select class="ctrl" id="sort">
+        <option value="name">A → Z</option>
+        <option value="rating-hi">Highest rated</option>
+        <option value="rating-lo">Lowest rated</option>
+        <option value="intensity">Intensity</option>
+        <option value="size">Cup size</option>
+      </select>
+      <div class="view-toggle">
+        <button class="vbtn active" id="vg">⊞</button>
+        <button class="vbtn" id="vl">☰</button>
+      </div>
+    </div>
+    <div id="pod-container"></div>
+  </main>
+</div>
+
+<!-- Rating Modal -->
+<div class="overlay" id="rate-overlay">
+  <div class="modal">
+    <div class="mhdr">
+      <div class="mhdr-accent" id="r-accent"></div>
+      <button class="mclose" id="r-close">✕</button>
+      <div class="mhdr-title" id="r-name"></div>
+      <div class="mhdr-meta" id="r-meta"></div>
+    </div>
+    <div class="mbody">
+      <div id="r-prev"></div>
+      <span class="flbl">Your rating</span>
+      <div class="spicker" id="star-picker">
+        <button class="sp" data-v="1">★</button>
+        <button class="sp" data-v="2">★</button>
+        <button class="sp" data-v="3">★</button>
+        <button class="sp" data-v="4">★</button>
+        <button class="sp" data-v="5">★</button>
+      </div>
+      <div class="rhint" id="r-hint">Tap a star to rate</div>
+      <span class="flbl">Tasting notes</span>
+      <textarea class="ftextarea" id="r-notes" placeholder="Flavour, body, finish, good with milk?…"></textarea>
+      <div class="mactions">
+        <button class="btn-pri" id="r-save">Save</button>
+        <button class="btn-sec" id="r-clear">Clear rating</button>
+      </div>
+      <!-- delete custom pod section, shown only for custom pods -->
+      <div class="del-confirm" id="r-del-confirm">
+        <p>Remove this pod from your list? This also deletes its rating.</p>
+        <div class="del-confirm-btns">
+          <button class="btn-confirm-del" id="r-del-yes">Yes, remove it</button>
+          <button class="btn-confirm-cancel" id="r-del-no">Cancel</button>
+        </div>
+      </div>
+      <div id="r-del-wrap" style="margin-top:10px;display:none">
+        <button class="btn-del" id="r-del-trigger">Remove this pod…</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Custom Pod Modal -->
+<div class="overlay" id="add-overlay">
+  <div class="modal">
+    <div class="ahdr">
+      <button class="mclose" id="add-close">✕</button>
+      <div class="ahdr-title">Add a pod</div>
+      <div class="ahdr-sub">Seasonal, limited edition, or anything not on the main list</div>
+    </div>
+    <div class="mbody">
+      <div class="frow">
+        <div class="fcol">
+          <span class="flbl">Name *</span>
+          <input class="finput" id="a-name" type="text" placeholder="e.g. Pumpkin Spice Cake">
+        </div>
+        <div class="fcol">
+          <span class="flbl">Cup size *</span>
+          <select class="fselect" id="a-size">
+            <option value="">Choose…</option>
+            <option>Espresso (40ml)</option>
+            <option>Double Espresso (80ml)</option>
+            <option>Gran Lungo (150ml)</option>
+            <option>Mug (230ml)</option>
+            <option>Alto XL (355ml)</option>
+            <option>Carafe (535ml)</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fcol">
+          <span class="flbl">Intensity (1–11)</span>
+          <input class="finput" id="a-intensity" type="number" min="1" max="11" placeholder="e.g. 6">
+        </div>
+        <div class="fcol">
+          <span class="flbl">Roast</span>
+          <select class="fselect" id="a-roast">
+            <option value="">Choose…</option>
+            <option value="light">Light roast</option>
+            <option value="medium">Medium roast</option>
+            <option value="dark">Dark roast</option>
+            <option value="flavoured">Flavoured</option>
+            <option value="decaf">Decaf</option>
+            <option value="seasonal">Seasonal / LE</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <span class="flbl">Flavour / description</span>
+        <input class="finput" id="a-desc" type="text" placeholder="e.g. Sweet pumpkin & warm spices">
+      </div>
+      <span class="flbl">Rate it now (optional)</span>
+      <div class="spicker" id="add-star-picker">
+        <button class="sp" data-av="1">★</button>
+        <button class="sp" data-av="2">★</button>
+        <button class="sp" data-av="3">★</button>
+        <button class="sp" data-av="4">★</button>
+        <button class="sp" data-av="5">★</button>
+      </div>
+      <div class="rhint" id="add-hint">Skip this and rate it later</div>
+      <span class="flbl">Tasting notes</span>
+      <textarea class="ftextarea" id="a-notes" placeholder="What did you think?…"></textarea>
+      <div class="mactions">
+        <button class="btn-pri" id="add-save">Add pod</button>
+        <button class="btn-sec" id="add-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const fbApp = initializeApp({
+  apiKey: "AIzaSyCNPRW7xDjYQ-BHZ3LRWCpIJ91rPDAmXYQ",
+  authDomain: "vertuo-journal.firebaseapp.com",
+  projectId: "vertuo-journal",
+  storageBucket: "vertuo-journal.firebasestorage.app",
+  messagingSenderId: "1082777545569",
+  appId: "1:1082777545569:web:456cd02f233c3d5db63320"
+});
+const db   = getFirestore(fbApp);
+const auth = getAuth(fbApp);
+
+// ── Silent anonymous auth + Firestore listeners ───────────────────────
+// Signs in anonymously on load so Firestore rules can gate writes.
+// No UI needed — just prevents anyone without your app from writing.
+signInAnonymously(auth).then(() => {
+  onSnapshot(collection(db, "ratings"), snap => {
+    ratings = {};
+    snap.forEach(d => { ratings[d.id] = d.data(); });
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("app").style.display = "grid";
+    render();
+  });
+  onSnapshot(collection(db, "custom_pods"), snap => {
+    customPods = {};
+    snap.forEach(d => { customPods[d.id] = d.data(); });
+    render();
+  });
+}).catch(err => {
+  document.getElementById("loading").innerHTML = "Failed to connect. Check your internet connection.";
+  console.error("Auth error:", err);
+});
+
+// ── Roast visual config (plain objects, no CSS vars) ──────────────────────
+const ROAST = {
+  light:     { bg:"#e8f0e0", text:"#2d5a1b", dot:"#5a9e30", top:"#8abf50", icon:"☀",  label:"Light"     },
+  medium:    { bg:"#fdf0d8", text:"#8b5000", dot:"#d4820a", top:"#c9821e", icon:"◑",  label:"Medium"    },
+  dark:      { bg:"#f0e4d0", text:"#6b3510", dot:"#a04018", top:"#7a3a18", icon:"●",  label:"Dark"      },
+  flavoured: { bg:"#f2eafa", text:"#5a2d80", dot:"#9060c0", top:"#9060c0", icon:"✦",  label:"Flavoured" },
+  decaf:     { bg:"#e4f2f4", text:"#1a5060", dot:"#2a8090", top:"#2a8090", icon:"◇",  label:"Decaf"     },
+  seasonal:  { bg:"#fce8e8", text:"#8b1a2a", dot:"#c03050", top:"#c03050", icon:"❋",  label:"Seasonal"  },
+  custom:    { bg:"#e8ece0", text:"#3a4a20", dot:"#607040", top:"#607040", icon:"＋",  label:"My add"    },
+};
+
+const SIZE_ORDER = [
+  "Espresso (40ml)",
+  "Double Espresso (80ml)",
+  "Gran Lungo (150ml)",
+  "Mug (230ml)",
+  "Alto XL (355ml)",
+  "Carafe (535ml)"
+];
+
+const RLABELS = ["","Not for me","It'll do","Decent","Really like it","Absolute favourite"];
+
+// ── Pod data — comprehensive verified Vertuo-only list ────────────────────
+const PODS = [
+  // ── Espresso 40ml ─────────────────────────────────────────────────────────
+  { id:"diavolitto",        name:"Diavolitto",                   size:"Espresso (40ml)",        roast:"dark",      intensity:11, desc:"Powerful & smoky with intense bitterness" },
+  { id:"altissio",          name:"Altissio",                     size:"Espresso (40ml)",        roast:"dark",      intensity:9,  desc:"Rich, bold & full-bodied" },
+  { id:"voltesso",          name:"Voltesso",                     size:"Espresso (40ml)",        roast:"light",     intensity:4,  desc:"Light, sweet biscuit & caramel" },
+  { id:"half-caff-esp",     name:"Half Caffeinato",              size:"Espresso (40ml)",        roast:"medium",    intensity:5,  desc:"Balanced sweet biscuit, half the caffeine" },
+  { id:"decaf-esp",         name:"Decaffeinato Espresso",        size:"Espresso (40ml)",        roast:"decaf",     intensity:5,  desc:"Rich espresso profile, no caffeine" },
+  { id:"altissio-decaf",    name:"Altissio Decaffeinato",        size:"Espresso (40ml)",        roast:"decaf",     intensity:9,  desc:"Bold full-bodied espresso, decaffeinated" },
+  // ── Double Espresso 80ml ──────────────────────────────────────────────────
+  { id:"scuro",             name:"Double Espresso Scuro",        size:"Double Espresso (80ml)", roast:"dark",      intensity:11, desc:"Dark, bold & smoky Robusta/Arabica blend" },
+  { id:"chiaro",            name:"Double Espresso Chiaro",       size:"Double Espresso (80ml)", roast:"medium",    intensity:8,  desc:"Dense & caramel notes, great for lattes" },
+  { id:"bianco-forte",      name:"Bianco Forte",                 size:"Double Espresso (80ml)", roast:"dark",      intensity:8,  desc:"Bold & dark roasted, designed for milk drinks" },
+  { id:"bianco-doppio",     name:"Bianco Doppio",                size:"Double Espresso (80ml)", roast:"light",     intensity:null,desc:"Nutty & balanced, the milk-first double espresso" },
+  { id:"ice-leggero",       name:"Ice Leggero",                  size:"Double Espresso (80ml)", roast:"light",     intensity:8,  desc:"Light & fruity cereal notes, designed over ice" },
+  { id:"ice-intenso",       name:"Ice Intenso",                  size:"Double Espresso (80ml)", roast:"dark",      intensity:11, desc:"Bold & smoky, designed over ice" },
+  { id:"decaf-dbl",         name:"Decaffeinato Double Espresso", size:"Double Espresso (80ml)", roast:"decaf",     intensity:7,  desc:"Rich double espresso, no caffeine" },
+  // ── Gran Lungo 150ml ──────────────────────────────────────────────────────
+  { id:"fortado",           name:"Fortado",                      size:"Gran Lungo (150ml)",     roast:"dark",      intensity:8,  desc:"Intense & full-bodied, cocoa & oak wood" },
+  { id:"arondio",           name:"Arondio",                      size:"Gran Lungo (150ml)",     roast:"medium",    intensity:6,  desc:"Mild & round, cereal notes with light acidity" },
+  { id:"inizio",            name:"Inizio",                       size:"Gran Lungo (150ml)",     roast:"light",     intensity:4,  desc:"Floral & cereal, split-roasted East African Arabica" },
+  { id:"aflorazio",         name:"Aflorazio",                    size:"Gran Lungo (150ml)",     roast:"light",     intensity:4,  desc:"Floral & blueberry, sweet East African Arabica" },
+  { id:"costa-rica",        name:"Costa Rica",                   size:"Gran Lungo (150ml)",     roast:"medium",    intensity:7,  desc:"Master Origin — malty & sweet, hot-spring water process" },
+  { id:"fortado-decaf",     name:"Fortado Decaffeinato",         size:"Gran Lungo (150ml)",     roast:"decaf",     intensity:7,  desc:"Full-bodied gran lungo, no caffeine" },
+  { id:"ontuoso-decaf",     name:"Ontuoso Decaffeinato",         size:"Gran Lungo (150ml)",     roast:"decaf",     intensity:4,  desc:"Light-bodied & malty decaf, Colombian & Brazilian Arabica" },
+  // ── Mug 230ml ─────────────────────────────────────────────────────────────
+  { id:"melozio",           name:"Melozio",                      size:"Mug (230ml)",            roast:"medium",    intensity:6,  desc:"Smooth, honey & sweet — the most popular Vertuo pod" },
+  { id:"melozio-boost",     name:"Melozio Boost",                size:"Mug (230ml)",            roast:"medium",    intensity:6,  desc:"Same smooth Melozio profile with extra caffeine" },
+  { id:"melozio-decaf",     name:"Melozio Decaffeinato",         size:"Mug (230ml)",            roast:"decaf",     intensity:6,  desc:"Smooth honey sweetness, no caffeine" },
+  { id:"odacio",            name:"Odacio",                       size:"Mug (230ml)",            roast:"medium",    intensity:7,  desc:"Bold & lively, Nicaragua & Ethiopia Arabica" },
+  { id:"stormio",           name:"Stormio",                      size:"Mug (230ml)",            roast:"dark",      intensity:8,  desc:"Intense, rich & woody — great for Americanos" },
+  { id:"stormio-boost",     name:"Stormio Boost",                size:"Mug (230ml)",            roast:"dark",      intensity:8,  desc:"Same rich Stormio profile with extra caffeine" },
+  { id:"intenso",           name:"Intenso",                      size:"Mug (230ml)",            roast:"dark",      intensity:9,  desc:"Rich full-bodied dark roast, toasted & bold" },
+  { id:"elvazio",           name:"Elvazio",                      size:"Mug (230ml)",            roast:"light",     intensity:4,  desc:"Delicate & fruity, light-roasted South American Arabica" },
+  { id:"giornio",           name:"Giornio",                      size:"Mug (230ml)",            roast:"light",     intensity:4,  desc:"Floral & velvety, Ethiopian & Kenyan Arabica" },
+  { id:"solelio",           name:"Solelio",                      size:"Mug (230ml)",            roast:"light",     intensity:2,  desc:"Light & fruity, red fruit notes — Kenyan & Colombian Arabica" },
+  { id:"decaf-intenso",     name:"Decaffeinato Intenso",         size:"Mug (230ml)",            roast:"decaf",     intensity:7,  desc:"Full-bodied decaf, balanced & smooth" },
+  { id:"caramelizio",       name:"Caramelizio",                  size:"Mug (230ml)",            roast:"flavoured", intensity:6,  desc:"Barista Creations, caramelised sugar & vanilla notes" },
+  { id:"vanizio",           name:"Vanizio",                      size:"Mug (230ml)",            roast:"flavoured", intensity:6,  desc:"Barista Creations, velvety vanilla & biscuity" },
+  { id:"hazelino",          name:"Hazelino Mug",                 size:"Mug (230ml)",            roast:"flavoured", intensity:6,  desc:"Barista Creations, smooth hazelnut & praline" },
+  { id:"vanilla-mug",       name:"Vanilla Custard Mug",          size:"Mug (230ml)",            roast:"flavoured", intensity:5,  desc:"Barista Creations, sweet vanilla & creamy" },
+  { id:"caramel-cookie",    name:"Caramel Cookie",               size:"Mug (230ml)",            roast:"flavoured", intensity:6,  desc:"Barista Creations, caramel & biscuit" },
+  { id:"rich-choc",         name:"Rich Chocolate",               size:"Mug (230ml)",            roast:"flavoured", intensity:6,  desc:"Barista Creations, indulgent chocolate" },
+  { id:"sweet-vanilla",     name:"Sweet Vanilla",                size:"Mug (230ml)",            roast:"flavoured", intensity:5,  desc:"Barista Creations, smooth & sweet vanilla" },
+  { id:"golden-caramel",    name:"Golden Caramel",               size:"Mug (230ml)",            roast:"flavoured", intensity:5,  desc:"Barista Creations, velvety caramel & biscuit" },
+  // Master Origins — Mug
+  { id:"mo-mexico",         name:"Mexico",                       size:"Mug (230ml)",            roast:"medium",    intensity:7,  desc:"Master Origin — intense & spiced, great iced" },
+  { id:"mo-colombia",       name:"Colombia",                     size:"Mug (230ml)",            roast:"light",     intensity:5,  desc:"Master Origin — sweet & winey late-harvest fruity notes" },
+  { id:"mo-ethiopia",       name:"Ethiopia",                     size:"Mug (230ml)",            roast:"light",     intensity:4,  desc:"Master Origin — dried fruit & winey, natural sun-dried process" },
+  { id:"mo-nicaragua",      name:"Nicaragua",                    size:"Mug (230ml)",            roast:"medium",    intensity:7,  desc:"Master Origin — balanced & sweet, honey-processed" },
+  { id:"mo-indonesia",      name:"Indonesia",                    size:"Mug (230ml)",            roast:"dark",      intensity:8,  desc:"Master Origin — earthy & woody, wet-hulled process" },
+  { id:"mo-india",          name:"India",                        size:"Mug (230ml)",            roast:"dark",      intensity:10, desc:"Master Origin — spicy & full-bodied, monsooned Arabica" },
+  { id:"mo-peru",           name:"Peru",                         size:"Mug (230ml)",            roast:"light",     intensity:5,  desc:"Master Origin — organic, balanced & sweet with caramel notes" },
+  { id:"mo-el-salvador",    name:"El Salvador",                  size:"Mug (230ml)",            roast:"medium",    intensity:6,  desc:"Master Origin — smooth & malty, red honey processed" },
+  // Alto XL 355ml
+  { id:"alto-ambrato",      name:"Alto Ambrato",                 size:"Alto XL (355ml)",        roast:"medium",    intensity:7,  desc:"Indian & Colombian beans, cocoa & spice — Vertuo Next only" },
+  { id:"alto-onice",        name:"Alto Onice",                   size:"Alto XL (355ml)",        roast:"dark",      intensity:9,  desc:"Arabica & Robusta, woody & caramel — Vertuo Next only" },
+  { id:"alto-dolce",        name:"Alto Dolce",                   size:"Alto XL (355ml)",        roast:"light",     intensity:4,  desc:"Sweet, smooth, cereal & honey — Vertuo Next only" },
+  { id:"alto-intenso",      name:"Alto Intenso",                 size:"Alto XL (355ml)",        roast:"dark",      intensity:9,  desc:"Bold & powerful full XL cup — Vertuo Next only" },
+  // Carafe 535ml
+  { id:"carafe-classico",   name:"Carafe Classico",              size:"Carafe (535ml)",         roast:"medium",    intensity:7,  desc:"Colombian & Peruvian, smooth pour-over style — Vertuo Next only" },
+  { id:"carafe-intenso",    name:"Carafe Intenso",               size:"Carafe (535ml)",         roast:"dark",      intensity:9,  desc:"Bold dark pour-over style — Vertuo Next only" },
+  // Cold brew
+  { id:"cold-brew",         name:"Cold Brew Style Intense",      size:"Carafe (535ml)",         roast:"dark",      intensity:6,  desc:"Inspired by cold brew — smooth, bold & sweet caramel, hot-to-cold brew method" },
+  // Blue Bottle Coffee collabs
+  { id:"bb-bold-blend",     name:"Blue Bottle Bold Blend",       size:"Mug (230ml)",            roast:"medium",    intensity:6,  desc:"Blue Bottle collab — caramel, roasted nut & malty, 100% Arabica" },
+  { id:"bb-blend-no2",      name:"Blue Bottle Blend No. 2",      size:"Double Espresso (80ml)", roast:"dark",      intensity:8,  desc:"Blue Bottle LE collab — rich & smooth, Guatemalan Robusta & African Arabica", seasonal:true },
+  // Coffee+ (functional / enhanced)
+  { id:"vivida",            name:"Vivida",                       size:"Mug (230ml)",            roast:"medium",    intensity:6,  desc:"Coffee+ with Vitamin B12 — honeyed cereal, Latin American Arabica" },
+  { id:"stormio-go",        name:"Stormio Go",                   size:"Mug (230ml)",            roast:"dark",      intensity:8,  desc:"Coffee+ with extra caffeine — rich, intense & woody" },
+  { id:"ginseng-delight",   name:"Ginseng Delight",              size:"Double Espresso (80ml)", roast:"medium",    intensity:6,  desc:"Coffee+ with ginseng — smooth caramel & earthy notes" },
+  { id:"active-b6",         name:"Active B6",                    size:"Double Espresso (80ml)", roast:"medium",    intensity:6,  desc:"Coffee+ with Vitamin B6 — almond vanilla, designed over ice" },
+  // Starbucks by Nespresso for Vertuo
+  { id:"sbux-pike",         name:"Starbucks Pike Place",         size:"Mug (230ml)",            roast:"medium",    intensity:6,  desc:"Starbucks — smooth, well-rounded medium roast" },
+  { id:"sbux-sumatra",      name:"Starbucks Sumatra",            size:"Mug (230ml)",            roast:"dark",      intensity:10, desc:"Starbucks — earthy, herbal & full-bodied dark roast" },
+  { id:"sbux-verona",       name:"Starbucks Caffè Verona",       size:"Mug (230ml)",            roast:"dark",      intensity:9,  desc:"Starbucks — rich & bold with dark cocoa notes" },
+  { id:"sbux-french",       name:"Starbucks French Roast",       size:"Mug (230ml)",            roast:"dark",      intensity:10, desc:"Starbucks — intense smoky dark roast" },
+  { id:"sbux-veranda",      name:"Starbucks Veranda Blend",      size:"Mug (230ml)",            roast:"light",     intensity:6,  desc:"Starbucks Blonde — mellow & soft with light citrus" },
+  { id:"sbux-colombia",     name:"Starbucks Colombia",           size:"Mug (230ml)",            roast:"medium",    intensity:7,  desc:"Starbucks — nutty & juicy medium roast single origin" },
+  { id:"sbux-blonde-esp",   name:"Starbucks Blonde Espresso",    size:"Espresso (40ml)",        roast:"light",     intensity:6,  desc:"Starbucks — smooth, sweet & citrusy blonde espresso" },
+  { id:"sbux-esp-roast",    name:"Starbucks Espresso Roast",     size:"Espresso (40ml)",        roast:"dark",      intensity:9,  desc:"Starbucks — classic dark espresso, caramelised & bold" },
+  { id:"sbux-caramel",      name:"Starbucks Caramel Flavored",   size:"Mug (230ml)",            roast:"flavoured", intensity:6,  desc:"Starbucks — smooth medium roast with caramel flavour" },
+  { id:"sbux-vanilla",      name:"Starbucks Creamy Vanilla",     size:"Mug (230ml)",            roast:"flavoured", intensity:5,  desc:"Starbucks — light roast with sweet vanilla & shortbread notes" },
+  // Seasonal / Limited Edition
+  { id:"pumpkin-spice",     name:"Pumpkin Spice Cake",           size:"Mug (230ml)",            roast:"seasonal",  intensity:6,  desc:"Autumn LE — sweet pumpkin, cinnamon & warm spices", seasonal:true },
+  { id:"sbux-pumpkin",      name:"Starbucks Pumpkin Spice",      size:"Mug (230ml)",            roast:"seasonal",  intensity:6,  desc:"Starbucks autumn LE — classic pumpkin spice latte flavour", seasonal:true },
+  { id:"sunny-almond",      name:"Sunny Almond Vanilla",         size:"Mug (230ml)",            roast:"seasonal",  intensity:5,  desc:"Summer LE — smooth almond & vanilla over ice, light Arabica", seasonal:true },
+  { id:"coconut-ice",       name:"Tropical Coconut Over Ice",    size:"Double Espresso (80ml)", roast:"seasonal",  intensity:5,  desc:"Summer LE — toasted coconut, vanilla & caramel over ice", seasonal:true },
+  { id:"pistachio-vanilla", name:"Pistachio Vanilla",            size:"Double Espresso (80ml)", roast:"seasonal",  intensity:5,  desc:"Summer LE — pistachio & creamy vanilla over ice, African & Asian Arabica", seasonal:true },
+  { id:"peppermint-mug",    name:"Peppermint",                   size:"Mug (230ml)",            roast:"seasonal",  intensity:6,  desc:"Holiday LE — striking mint & cool finish", seasonal:true },
+  { id:"sweet-almond",      name:"Sweet Almond & Hibiscus",      size:"Mug (230ml)",            roast:"seasonal",  intensity:5,  desc:"Festive LE — almond, hibiscus & caramel", seasonal:true },
+  { id:"cinn-tamarind",     name:"Cinnamon & Candied Tamarind",  size:"Mug (230ml)",            roast:"seasonal",  intensity:6,  desc:"Festive LE — dried fruit, tamarind & spiced cinnamon", seasonal:true },
+  { id:"festive-dbl",       name:"Festive Double Espresso",      size:"Double Espresso (80ml)", roast:"seasonal",  intensity:7,  desc:"Festive LE — cereal, fruit & smooth caramel", seasonal:true },
+  { id:"peanut-sesame",     name:"Peanut & Roasted Sesame",      size:"Mug (230ml)",            roast:"seasonal",  intensity:6,  desc:"Holiday LE (Jean Imbert) — nutty peanut & toasted sesame", seasonal:true },
+  { id:"almond-croissant",  name:"Almond Croissant",             size:"Mug (230ml)",            roast:"seasonal",  intensity:6,  desc:"Holiday LE (Jean Imbert) — buttery almond pastry notes", seasonal:true },
+  { id:"unforgettable-dbl", name:"Unforgettable Double Espresso",size:"Double Espresso (80ml)", roast:"seasonal",  intensity:9,  desc:"Holiday LE (Jean Imbert) — bold, dark & powerful festive espresso", seasonal:true },
+  { id:"bb-blend-no2",      name:"Blue Bottle Blend No. 2",      size:"Double Espresso (80ml)", roast:"seasonal",  intensity:8,  desc:"Blue Bottle LE collab — rich Guatemalan Robusta & African Arabica", seasonal:true },
+  // Papua New Guinea (Master Origin LE)
+  { id:"mo-png",            name:"Papua New Guinea",             size:"Mug (230ml)",            roast:"seasonal",  intensity:6,  desc:"Master Origin LE — red berry & jam, juicy acidity & velvety body", seasonal:true },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────
+let ratings = {};
+let customPods = {};
+let currentFilter = "all";
+let currentView = "grid";
+let currentSort = "name";
+let searchQuery = "";
+let activePodId = null;
+let chosenRating = 0;
+let addChosenRating = 0;
+
+
+  render();
+});
+
+async function saveRating(id, rating, notes) {
+  await setDoc(doc(db, "ratings", id), { rating, notes, updatedAt: new Date().toISOString() });
+}
+async function clearRating(id) { await deleteDoc(doc(db, "ratings", id)); }
+async function saveCustomPod(id, data) { await setDoc(doc(db, "custom_pods", id), data); }
+async function deleteCustomPod(id) {
+  await deleteDoc(doc(db, "custom_pods", id));
+  await deleteDoc(doc(db, "ratings", id)).catch(() => {});
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function allPods() {
+  const custom = Object.entries(customPods).map(([id, d]) => ({
+    id, name:d.name, size:d.size,
+    roast: d.roast || "custom",
+    intensity: d.intensity || null,
+    desc: d.desc || "",
+    custom: true,
+  }));
+  return [...PODS, ...custom];
+}
+
+function starsHTML(n) {
+  return [1,2,3,4,5].map(i => `<span class="st${i<=n?" on":""}"">★</span>`).join("");
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function render() { renderSidebar(); renderPods(); renderStats(); }
+
+function renderStats() {
+  const pods = allPods();
+  const tried = pods.filter(p => ratings[p.id]).length;
+  const ratedPods = pods.filter(p => ratings[p.id]?.rating);
+  const avg = ratedPods.length
+    ? (ratedPods.reduce((s,p) => s + ratings[p.id].rating, 0) / ratedPods.length).toFixed(1)
+    : "—";
+  document.getElementById("s-tried").textContent = tried;
+  document.getElementById("s-total").textContent = pods.length;
+  document.getElementById("s-avg").textContent = avg;
+}
+
+function getFiltered() {
+  let pods = allPods().filter(p => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!p.name.toLowerCase().includes(q) && !p.desc.toLowerCase().includes(q)) return false;
+    }
+    if (currentFilter === "tried")    return !!ratings[p.id];
+    if (currentFilter === "untried")  return !ratings[p.id];
+    if (currentFilter === "seasonal") return p.seasonal || p.roast === "seasonal";
+    if (currentFilter === "custom")   return !!p.custom;
+    if (currentFilter.startsWith("roast:"))  return p.roast === currentFilter.slice(6);
+    if (currentFilter.startsWith("size:"))   return p.size === currentFilter.slice(5);
+    if (currentFilter.startsWith("rated:"))  return ratings[p.id]?.rating == parseInt(currentFilter.slice(6));
+    return true;
+  });
+
+  pods.sort((a,b) => {
+    if (currentSort === "name")      return a.name.localeCompare(b.name);
+    if (currentSort === "intensity") return (b.intensity||0) - (a.intensity||0);
+    if (currentSort === "size")      return SIZE_ORDER.indexOf(a.size) - SIZE_ORDER.indexOf(b.size);
+    if (currentSort === "rating-hi") return (ratings[b.id]?.rating||0) - (ratings[a.id]?.rating||0);
+    if (currentSort === "rating-lo") {
+      const ra = ratings[a.id]?.rating||0, rb = ratings[b.id]?.rating||0;
+      if (!ra && !rb) return 0; if (!ra) return 1; if (!rb) return -1;
+      return ra - rb;
+    }
+    return 0;
+  });
+  return pods;
+}
+
+function renderSidebar() {
+  const pods = allPods();
+  const cnt = f => {
+    if (f==="all")      return pods.length;
+    if (f==="tried")    return pods.filter(p=>ratings[p.id]).length;
+    if (f==="untried")  return pods.filter(p=>!ratings[p.id]).length;
+    if (f==="seasonal") return pods.filter(p=>p.seasonal||p.roast==="seasonal").length;
+    if (f==="custom")   return Object.keys(customPods).length;
+    if (f.startsWith("roast:"))  return pods.filter(p=>p.roast===f.slice(6)).length;
+    if (f.startsWith("size:"))   return pods.filter(p=>p.size===f.slice(5)).length;
+    if (f.startsWith("rated:"))  return pods.filter(p=>ratings[p.id]?.rating==parseInt(f.slice(6))).length;
+    return 0;
+  };
+
+  const btn = (f, label, dot) => {
+    const active = currentFilter===f;
+    return `<button class="filt${active?" active":""}" onclick="setFilter('${f}')">
+      ${dot ? `<span class="fd" style="background:${dot}"></span>` : ""}
+      ${label}
+      <span class="fc">${cnt(f)}</span>
+    </button>`;
+  };
+
+  document.getElementById("sidebar").innerHTML = `
+    <div class="sidebar-section">
+      <span class="sidebar-label">Status</span>
+      ${btn("all","All pods")}
+      ${btn("tried","Tried")}
+      ${btn("untried","Not tried yet")}
+    </div>
+    <div class="sep"></div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Roast</span>
+      ${["medium","light","dark","flavoured","decaf","seasonal"].map(r =>
+        btn("roast:"+r, ROAST[r].label, ROAST[r].dot)
+      ).join("")}
+    </div>
+    <div class="sep"></div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Cup size</span>
+      ${SIZE_ORDER.map(s => btn("size:"+s, s.split(" (")[0])).join("")}
+    </div>
+    <div class="sep"></div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">My ratings</span>
+      ${[5,4,3,2,1].map(n => btn("rated:"+n, "★".repeat(n)+"☆".repeat(5-n))).join("")}
+    </div>
+    <div class="sep"></div>
+    <div class="sidebar-section">
+      ${btn("custom","My additions", ROAST.custom.dot)}
+      <button class="add-btn" onclick="openAddModal()">
+        <span style="font-size:16px;line-height:1;margin-top:-1px">+</span> Add a pod
+      </button>
+    </div>`;
+}
+
+function renderPods() {
+  const pods = getFiltered();
+  const cont = document.getElementById("pod-container");
+
+  if (!pods.length) {
+    cont.className = "";
+    cont.innerHTML = `<div class="empty"><div class="empty-ico">☕</div><h3 style="font-size:15px;margin-bottom:6px">No pods found</h3><p>Try adjusting your filter or search</p></div>`;
+    return;
+  }
+
+  if (currentView === "grid") {
+    cont.className = "pods-grid";
+    cont.innerHTML = pods.map(pod => {
+      const r = ratings[pod.id];
+      const ro = ROAST[pod.roast] || ROAST.custom;
+      const intW = pod.intensity ? Math.round((pod.intensity/11)*100) : 0;
+      return `
+        <div class="pod-card${pod.custom?" custom-pod":""}" onclick="openRateModal('${pod.id}')">
+          ${pod.seasonal ? `<div class="ltd-badge">Limited</div>` : ""}
+          <div class="card-top" style="background:${ro.top}">
+            <div class="card-int-bar">
+              <div class="card-int-fill" style="width:${intW}%;background:rgba(255,255,255,0.45)"></div>
+            </div>
+            <div class="card-icon">${ro.icon}</div>
+          </div>
+          <div class="card-body">
+            <div class="size-tag" style="background:${ro.bg};color:${ro.text}">${pod.size.split(" (")[0]}</div>
+            <div class="pod-name">${pod.name}</div>
+            <div class="pod-desc">${pod.desc}${pod.intensity ? ` · Intensity ${pod.intensity}` : ""}</div>
+            <div class="rating-row">
+              <div class="stars">${starsHTML(r?.rating||0)}</div>
+              ${r?.rating ? `<span class="tried-tag">Tried ✓</span>` : `<span class="untried-tag">Not tried</span>`}
+            </div>
+          </div>
+        </div>`;
+    }).join("");
+  } else {
+    cont.className = "pods-list";
+    cont.innerHTML = pods.map(pod => {
+      const r = ratings[pod.id];
+      const ro = ROAST[pod.roast] || ROAST.custom;
+      return `
+        <div class="pod-row${pod.custom?" custom-pod":""}" onclick="openRateModal('${pod.id}')">
+          <div class="row-dot" style="background:${ro.dot}"></div>
+          <div class="row-name">${pod.name}</div>
+          ${pod.seasonal ? `<span class="row-badge">LE</span>` : ""}
+          <div class="row-cat" style="color:${ro.text}">${ro.label}</div>
+          <div class="row-size">${pod.size.split(" (")[0]}</div>
+          <div class="row-int">${pod.intensity ? `Int. ${pod.intensity}` : "—"}</div>
+          <div class="row-stars stars">${starsHTML(r?.rating||0)}</div>
+        </div>`;
+    }).join("");
+  }
+}
+
+// ── Rating Modal ──────────────────────────────────────────────────────────
+window.openRateModal = function(id) {
+  const pod = allPods().find(p => p.id === id);
+  if (!pod) return;
+  activePodId = id;
+  const r = ratings[id];
+  const ro = ROAST[pod.roast] || ROAST.custom;
+
+  document.getElementById("r-accent").style.background = ro.top;
+  document.getElementById("r-name").textContent = pod.name;
+  document.getElementById("r-meta").textContent =
+    [pod.size, pod.intensity ? `Intensity ${pod.intensity}` : null, ro.label, pod.desc]
+    .filter(Boolean).join(" · ");
+
+  document.getElementById("r-prev").innerHTML = r?.rating ? `
+    <div class="prev-entry">
+      <div class="prev-lbl">Last saved:</div>
+      <div class="prev-stars">${starsHTML(r.rating)}</div>
+      ${r.notes ? `<div class="prev-note">"${r.notes}"</div>` : ""}
+    </div>` : "";
+
+  chosenRating = r?.rating || 0;
+  updatePicker("star-picker", chosenRating, "data-v");
+  document.getElementById("r-notes").value = r?.notes || "";
+  document.getElementById("r-hint").textContent = chosenRating ? RLABELS[chosenRating] : "Tap a star to rate";
+
+  // Show delete option only for custom pods
+  const delWrap = document.getElementById("r-del-wrap");
+  const delConfirm = document.getElementById("r-del-confirm");
+  delConfirm.classList.remove("show");
+  delWrap.style.display = pod.custom ? "block" : "none";
+
+  document.getElementById("rate-overlay").classList.add("open");
+};
+
+function closeRateModal() {
+  document.getElementById("rate-overlay").classList.remove("open");
+  activePodId = null;
+}
+
+document.getElementById("r-close").onclick = closeRateModal;
+document.getElementById("rate-overlay").onclick = e => {
+  if (e.target === document.getElementById("rate-overlay")) closeRateModal();
+};
+
+// Star picker for rating modal
+document.querySelectorAll("#star-picker .sp").forEach(btn => {
+  const v = parseInt(btn.dataset.v);
+  btn.onmouseenter = () => { updatePicker("star-picker", v, "data-v"); document.getElementById("r-hint").textContent = RLABELS[v]; };
+  btn.onmouseleave = () => { updatePicker("star-picker", chosenRating, "data-v"); document.getElementById("r-hint").textContent = chosenRating ? RLABELS[chosenRating] : "Tap a star to rate"; };
+  btn.onclick = () => { chosenRating = v; updatePicker("star-picker", v, "data-v"); document.getElementById("r-hint").textContent = RLABELS[v]; };
+});
+
+document.getElementById("r-save").onclick = async () => {
+  if (!chosenRating) { showToast("Pick a star rating first"); return; }
+  await saveRating(activePodId, chosenRating, document.getElementById("r-notes").value.trim());
+  closeRateModal();
+  showToast("Rating saved ☕");
+};
+document.getElementById("r-clear").onclick = async () => {
+  if (!activePodId) return;
+  await clearRating(activePodId);
+  chosenRating = 0;
+  closeRateModal();
+  showToast("Rating cleared");
+};
+
+// Delete custom pod
+document.getElementById("r-del-trigger").onclick = () => {
+  document.getElementById("r-del-confirm").classList.add("show");
+  document.getElementById("r-del-trigger").style.display = "none";
+};
+document.getElementById("r-del-no").onclick = () => {
+  document.getElementById("r-del-confirm").classList.remove("show");
+  document.getElementById("r-del-trigger").style.display = "block";
+};
+document.getElementById("r-del-yes").onclick = async () => {
+  if (!activePodId) return;
+  const name = allPods().find(p => p.id === activePodId)?.name || "Pod";
+  await deleteCustomPod(activePodId);
+  closeRateModal();
+  showToast(`"${name}" removed`);
+};
+
+// ── Add Modal ─────────────────────────────────────────────────────────────
+window.openAddModal = function() {
+  addChosenRating = 0;
+  updatePicker("add-star-picker", 0, "data-av");
+  document.getElementById("add-hint").textContent = "Skip this and rate it later";
+  ["a-name","a-desc","a-notes"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("a-size").value = "";
+  document.getElementById("a-intensity").value = "";
+  document.getElementById("a-roast").value = "";
+  document.getElementById("add-overlay").classList.add("open");
+};
+
+function closeAddModal() { document.getElementById("add-overlay").classList.remove("open"); }
+
+document.getElementById("add-close").onclick = closeAddModal;
+document.getElementById("add-cancel").onclick = closeAddModal;
+document.getElementById("add-overlay").onclick = e => {
+  if (e.target === document.getElementById("add-overlay")) closeAddModal();
+};
+
+document.querySelectorAll("#add-star-picker .sp").forEach(btn => {
+  const v = parseInt(btn.dataset.av);
+  btn.onmouseenter = () => { updatePicker("add-star-picker", v, "data-av"); document.getElementById("add-hint").textContent = RLABELS[v]; };
+  btn.onmouseleave = () => { updatePicker("add-star-picker", addChosenRating, "data-av"); document.getElementById("add-hint").textContent = addChosenRating ? RLABELS[addChosenRating] : "Skip this and rate it later"; };
+  btn.onclick = () => { addChosenRating = v; updatePicker("add-star-picker", v, "data-av"); document.getElementById("add-hint").textContent = RLABELS[v]; };
+});
+
+document.getElementById("add-save").onclick = async () => {
+  const name = document.getElementById("a-name").value.trim();
+  const size = document.getElementById("a-size").value;
+  if (!name) { showToast("Enter a pod name"); return; }
+  if (!size)  { showToast("Choose a cup size"); return; }
+
+  const id = "custom_" + Date.now();
+  await saveCustomPod(id, {
+    name, size,
+    intensity: parseInt(document.getElementById("a-intensity").value) || null,
+    roast: document.getElementById("a-roast").value || "custom",
+    desc: document.getElementById("a-desc").value.trim(),
+    addedAt: new Date().toISOString(),
+  });
+  if (addChosenRating) {
+    await saveRating(id, addChosenRating, document.getElementById("a-notes").value.trim());
+  }
+  closeAddModal();
+  showToast(`"${name}" added ✓`);
+};
+
+// ── Shared helpers ─────────────────────────────────────────────────────────
+function updatePicker(pickerId, val, attr) {
+  document.querySelectorAll(`#${pickerId} .sp`).forEach(b => {
+    b.classList.toggle("on", parseInt(b.getAttribute(attr)) <= val);
+  });
+}
+
+window.setFilter = f => { currentFilter = f; render(); };
+document.getElementById("search").oninput = e => { searchQuery = e.target.value; renderPods(); };
+document.getElementById("sort").onchange  = e => { currentSort = e.target.value; renderPods(); };
+document.getElementById("vg").onclick = () => { currentView="grid"; document.getElementById("vg").classList.add("active"); document.getElementById("vl").classList.remove("active"); renderPods(); };
+document.getElementById("vl").onclick = () => { currentView="list"; document.getElementById("vl").classList.add("active"); document.getElementById("vg").classList.remove("active"); renderPods(); };
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+</script>
+</body>
+</html>
