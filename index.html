@@ -687,10 +687,6 @@ let activePodId = null;
 let chosenRating = 0;
 let addChosenRating = 0;
 
-
-  render();
-});
-
 async function saveRating(id, rating, notes) {
   await setDoc(doc(db, "ratings", id), { rating, notes, updatedAt: new Date().toISOString() });
 }
