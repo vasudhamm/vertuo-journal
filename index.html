@@ -151,11 +151,12 @@
   }
   .card-int-fill { height: 100%; }
   .card-icon {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: rgba(0,0,0,0.2); border: 1.5px solid rgba(255,255,255,0.4);
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(0,0,0,0.18); border: 1.5px solid rgba(255,255,255,0.3);
     display: flex; align-items: center; justify-content: center;
-    font-size: 12px; line-height: 1; position: relative; z-index: 1;
+    position: relative; z-index: 1;
   }
+  .card-icon svg { display: block; }
   .ltd-badge {
     position: absolute; top: 8px; right: 8px;
     background: rgba(255,255,255,0.92); color: #8b1a2a;
@@ -402,9 +403,13 @@
   .mob-card:active { transform: scale(0.97); }
   .mob-card-top { height: 40px; position: relative; flex-shrink: 0; }
   .mob-card-icon {
-    position: absolute; bottom: 7px; left: 10px;
-    font-size: 11px; opacity: 0.9;
+    position: absolute; bottom: 6px; left: 8px;
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px;
+    background: rgba(0,0,0,0.18); border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
   }
+  .mob-card-icon svg { width: 16px; height: 16px; display: block; }
   .mob-ltd { position: absolute; top: 5px; right: 5px;
     background: rgba(255,255,255,0.9); color: #8b1a2a;
     font-size: 8px; font-weight: 700; letter-spacing: 0.04em;
@@ -663,6 +668,61 @@ const ROAST = {
   custom:    { bg:"#e8ece0", text:"#3a4a20", dot:"#607040", top:"#607040", icon:"＋",  label:"My add"    },
 };
 
+// Size-based colour coding for card visuals
+const SIZE_COLORS = {
+  "Espresso (40ml)":        { bg:"#fce8e8", text:"#8b0a0a", dot:"#c03030", top:"#b02020" },
+  "Double Espresso (80ml)": { bg:"#fdeede", text:"#8b3a00", dot:"#c96010", top:"#b05010" },
+  "Gran Lungo (150ml)":     { bg:"#e8f0e0", text:"#1e5c1e", dot:"#3a8c3a", top:"#2e7a2e" },
+  "Mug (230ml)":            { bg:"#e4eef8", text:"#1a3a70", dot:"#2a60c0", top:"#2050a8" },
+  "Alto XL (355ml)":        { bg:"#f0e8f8", text:"#4a1a80", dot:"#7840c0", top:"#6030a8" },
+  "Carafe (535ml)":         { bg:"#f4ece0", text:"#5a3a10", dot:"#9a6020", top:"#7a4810" },
+};
+
+// Tiny white SVG icons representing each cup size
+const SIZE_ICONS = {
+  // Espresso: small squat cup with saucer
+  "Espresso (40ml)": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 7h10l-1.5 8H7.5L6 7z" stroke="white" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+    <path d="M16 9.5h1.5a1.5 1.5 0 0 1 0 3H16" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="4" y1="17" x2="18" y2="17" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+  // Double Espresso: slightly taller cup with saucer
+  "Double Espresso (80ml)": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 6h10l-1.5 9H7.5L6 6z" stroke="white" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+    <path d="M16 8.5h1.5a1.5 1.5 0 0 1 0 3H16" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="4" y1="17" x2="18" y2="17" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+  // Gran Lungo: tall narrow glass
+  "Gran Lungo (150ml)": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 3h8l-1.5 16h-5L7 3z" stroke="white" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+    <line x1="7" y1="3" x2="15" y2="3" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+  // Mug: wide mug with handle
+  "Mug (230ml)": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 5h11l-1.5 14H5.5L4 5z" stroke="white" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+    <path d="M15 8h1.5a2 2 0 0 1 0 4H15" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`,
+  // Alto XL: large mug with handle, bolder
+  "Alto XL (355ml)": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 4h12l-2 15H5L3 4z" stroke="white" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+    <path d="M15 7.5h1.5a2.5 2.5 0 0 1 0 5H15" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
+  // Carafe: wide-bottomed flask shape
+  "Carafe (535ml)": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 2h4v3l3 4v9H6V9l3-4V2z" stroke="white" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+    <line x1="8" y1="2" x2="14" y2="2" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="6" y1="13" x2="16" y2="13" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="1.5 1.5"/>
+  </svg>`,
+};
+
+function podStyle(pod) {
+  return SIZE_COLORS[pod.size] || { bg:"#e8ece0", text:"#3a4a20", dot:"#607040", top:"#607040" };
+}
+
+function podIcon(pod) {
+  return SIZE_ICONS[pod.size] || \`<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="6" stroke="white" stroke-width="1.4"/><line x1="11" y1="8" x2="11" y2="14" stroke="white" stroke-width="1.4" stroke-linecap="round"/><line x1="8" y1="11" x2="14" y2="11" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>\`;
+}
+
 const SIZE_ORDER = [
   "Espresso (40ml)",
   "Double Espresso (80ml)",
@@ -898,7 +958,7 @@ function renderSidebar() {
     <div class="sep"></div>
     <div class="sidebar-section">
       <span class="sidebar-label">Cup size</span>
-      ${SIZE_ORDER.map(s => btn("size:"+s, s.split(" (")[0])).join("")}
+      ${SIZE_ORDER.map(s => btn("size:"+s, s.split(" (")[0], SIZE_COLORS[s]?.dot)).join("")}
     </div>
     <div class="sep"></div>
     <div class="sidebar-section">
@@ -928,7 +988,7 @@ function renderPods() {
     cont.className = "pods-grid";
     cont.innerHTML = pods.map(pod => {
       const r = ratings[pod.id];
-      const ro = ROAST[pod.roast] || ROAST.custom;
+      const ro = podStyle(pod);
       const intW = pod.intensity ? Math.round((pod.intensity/11)*100) : 0;
       return `
         <div class="pod-card${pod.custom?" custom-pod":""}" onclick="openRateModal('${pod.id}')">
@@ -937,7 +997,7 @@ function renderPods() {
             <div class="card-int-bar">
               <div class="card-int-fill" style="width:${intW}%;background:rgba(255,255,255,0.45)"></div>
             </div>
-            <div class="card-icon">${ro.icon}</div>
+            <div class="card-icon">${podIcon(pod)}</div>
           </div>
           <div class="card-body">
             <div class="size-tag" style="background:${ro.bg};color:${ro.text}">${pod.size.split(" (")[0]}</div>
@@ -954,13 +1014,13 @@ function renderPods() {
     cont.className = "pods-list";
     cont.innerHTML = pods.map(pod => {
       const r = ratings[pod.id];
-      const ro = ROAST[pod.roast] || ROAST.custom;
+      const ro = podStyle(pod);
       return `
         <div class="pod-row${pod.custom?" custom-pod":""}" onclick="openRateModal('${pod.id}')">
           <div class="row-dot" style="background:${ro.dot}"></div>
           <div class="row-name">${pod.name}</div>
           ${pod.seasonal ? `<span class="row-badge">LE</span>` : ""}
-          <div class="row-cat" style="color:${ro.text}">${ro.label}</div>
+          <div class="row-cat" style="color:${ro.text}">${pod.roast.charAt(0).toUpperCase()+pod.roast.slice(1)}</div>
           <div class="row-size">${pod.size.split(" (")[0]}</div>
           <div class="row-int">${pod.intensity ? `Int. ${pod.intensity}` : "—"}</div>
           <div class="row-stars stars">${starsHTML(r?.rating||0)}</div>
@@ -975,12 +1035,12 @@ window.openRateModal = function(id) {
   if (!pod) return;
   activePodId = id;
   const r = ratings[id];
-  const ro = ROAST[pod.roast] || ROAST.custom;
+  const ro = podStyle(pod);
 
   document.getElementById("r-accent").style.background = ro.top;
   document.getElementById("r-name").textContent = pod.name;
   document.getElementById("r-meta").textContent =
-    [pod.size, pod.intensity ? `Intensity ${pod.intensity}` : null, ro.label, pod.desc]
+    [pod.size, pod.intensity ? `Intensity ${pod.intensity}` : null, pod.desc]
     .filter(Boolean).join(" · ");
 
   document.getElementById("r-prev").innerHTML = r?.rating ? `
@@ -1180,11 +1240,11 @@ function renderMobGrid() {
   }
   cont.innerHTML = pods.map(pod => {
     const r = ratings[pod.id];
-    const ro = ROAST[pod.roast] || ROAST.custom;
+    const ro = podStyle(pod);
     return `
       <div class="mob-card" onclick="openRateModal('${pod.id}')">
         <div class="mob-card-top" style="background:${ro.top}">
-          <span class="mob-card-icon">${ro.icon}</span>
+          <span class="mob-card-icon">${podIcon(pod)}</span>
           ${pod.seasonal ? `<span class="mob-ltd">LE</span>` : ""}
         </div>
         <div class="mob-card-body">
