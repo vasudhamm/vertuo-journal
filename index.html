@@ -351,88 +351,94 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 680px) {
-    .layout { grid-template-columns: 1fr; }
-    aside { display: none; }
-    main { padding: 0.875rem 0.875rem 5rem; }
-    .hdr-stats { display: none; }
-    .pods-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-    .toolbar { gap: 8px; }
-    .search-wrap { min-width: 0; }
-  }
 
-  /* ── Mobile bottom bar ── */
-  .mob-bar {
+  /* ── Mobile tabs ── */
+  .mob-tabs {
     display: none;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: #1c1410; z-index: 300;
-    padding: 0 0 env(safe-area-inset-bottom);
+    background: #1c1410;
+    padding: 0 1rem;
+    gap: 4px;
   }
-  .mob-bar-inner {
-    display: flex; align-items: center;
-    padding: 0 1rem; height: 52px; gap: 8px;
+  .mob-tab {
+    flex: 1; padding: 9px 4px 10px; border: none; background: transparent;
+    color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
+    transition: color 0.15s; white-space: nowrap;
   }
-  .mob-filter-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.12); border: none;
-    color: #fff; padding: 7px 14px; border-radius: 20px;
-    font-size: 13px; cursor: pointer; font-family: inherit;
-    white-space: nowrap;
+  .mob-tab.active { color: #fff; border-bottom-color: #c9821e; }
+
+  /* ── Mobile filter pills ── */
+  .mob-filters {
+    display: none;
+    overflow-x: auto; gap: 6px;
+    padding: 10px 1rem;
+    background: #faf6f0;
+    border-bottom: 1px solid #ddd4c5;
+    scrollbar-width: none;
   }
-  .mob-filter-btn:active { opacity: 0.7; }
-  .mob-add-btn {
-    margin-left: auto; background: #c9821e; border: none;
-    color: #fff; width: 36px; height: 36px; border-radius: 50%;
-    font-size: 22px; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; flex-shrink: 0;
+  .mob-filters::-webkit-scrollbar { display: none; }
+  .mob-pill {
+    flex-shrink: 0; padding: 5px 12px;
+    border: 1px solid #ddd4c5; border-radius: 20px;
+    background: #fff; font-size: 12px; color: #3b2314;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    transition: all 0.12s;
+  }
+  .mob-pill.active { background: #1c1410; color: #fff; border-color: #1c1410; }
+
+  /* ── Mobile card grid ── */
+  .mob-grid {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 12px 12px 80px;
+  }
+  .mob-card {
+    background: #fff; border: 1px solid #ddd4c5;
+    border-radius: 10px; overflow: hidden; cursor: pointer;
+    transition: transform 0.12s;
+    display: flex; flex-direction: column;
+  }
+  .mob-card:active { transform: scale(0.97); }
+  .mob-card-top { height: 40px; position: relative; flex-shrink: 0; }
+  .mob-card-icon {
+    position: absolute; bottom: 7px; left: 10px;
+    font-size: 11px; opacity: 0.9;
+  }
+  .mob-ltd { position: absolute; top: 5px; right: 5px;
+    background: rgba(255,255,255,0.9); color: #8b1a2a;
+    font-size: 8px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; padding: 1px 5px; border-radius: 20px; }
+  .mob-card-body { padding: 8px 10px 10px; flex: 1; display: flex; flex-direction: column; }
+  .mob-size-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; padding: 1px 6px; border-radius: 20px;
+    margin-bottom: 5px; display: inline-block;
+  }
+  .mob-name { font-size: 12px; font-weight: 600; line-height: 1.3; margin-bottom: 2px; }
+  .mob-desc { font-size: 10px; color: #7a6a57; line-height: 1.3; margin-bottom: 6px; flex: 1; }
+  .mob-stars { display: flex; gap: 1px; }
+  .mob-stars .st { font-size: 10px; }
+
+  /* ── Mobile add FAB ── */
+  .mob-fab {
+    display: none; position: fixed; bottom: calc(16px + env(safe-area-inset-bottom));
+    right: 16px; width: 52px; height: 52px; border-radius: 50%;
+    background: #c9821e; color: #fff; border: none;
+    font-size: 26px; cursor: pointer; z-index: 300;
+    align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(201,130,30,0.4);
     font-family: inherit; line-height: 1;
   }
-  .mob-active-filter {
-    font-size: 11px; color: rgba(255,255,255,0.55);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 120px;
-  }
-
-  /* ── Filter sheet ── */
-  .sheet-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45); z-index: 400;
-  }
-  .sheet-overlay.open { display: block; }
-  .sheet {
-    position: fixed; left: 0; right: 0; bottom: 0;
-    background: #fff; border-radius: 16px 16px 0 0;
-    z-index: 401; max-height: 80vh; overflow-y: auto;
-    padding: 0 0 env(safe-area-inset-bottom);
-    transform: translateY(100%); transition: transform 0.25s ease;
-  }
-  .sheet-overlay.open .sheet { transform: translateY(0); }
-  .sheet-handle {
-    width: 36px; height: 4px; background: #ddd4c5;
-    border-radius: 2px; margin: 12px auto 4px;
-  }
-  .sheet-title {
-    font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
-    text-transform: uppercase; color: #7a6a57;
-    padding: 10px 16px 6px;
-  }
-  .sheet-btn {
-    display: flex; align-items: center; gap: 10px;
-    width: 100%; padding: 11px 16px;
-    border: none; background: transparent;
-    font-size: 15px; color: #1c1410;
-    cursor: pointer; text-align: left; font-family: inherit;
-  }
-  .sheet-btn:active { background: #f7f3ee; }
-  .sheet-btn.active { color: #c9821e; font-weight: 600; }
-  .sheet-btn.active .fd { outline: 2px solid #c9821e; }
-  .sheet-sep { height: 1px; background: #f0e8da; margin: 4px 0; }
-  .sheet-count { margin-left: auto; font-size: 12px; color: #7a6a57; }
 
   @media (max-width: 680px) {
-    .mob-bar { display: block; }
-    .toolbar .view-toggle,
-    .toolbar select.ctrl { display: none; }
+    .layout { display: none !important; }
+    #loading { min-height: calc(100vh - 56px); }
+    .hdr-stats { display: none; }
+    .mob-tabs { display: flex; }
+    .mob-filters { display: flex; }
+    .mob-grid { display: grid; }
+    .mob-fab { display: flex; }
   }
 
 </style>
@@ -455,6 +461,22 @@
     <span>avg <b id="s-avg">—</b></span>
   </div>
 </header>
+
+<!-- Mobile tabs -->
+<div class="mob-tabs" id="mob-tabs">
+  <button class="mob-tab active" data-tab="all" onclick="setMobTab('all')">All pods</button>
+  <button class="mob-tab" data-tab="tried" onclick="setMobTab('tried')">Tried</button>
+  <button class="mob-tab" data-tab="untried" onclick="setMobTab('untried')">Not tried</button>
+</div>
+
+<!-- Mobile filter pills -->
+<div class="mob-filters" id="mob-filters"></div>
+
+<!-- Mobile card grid -->
+<div class="mob-grid" id="mob-grid"></div>
+
+<!-- Mobile FAB -->
+<button class="mob-fab" onclick="openAddModal()" aria-label="Add a pod">+</button>
 
 <div id="loading"><div class="spinner"></div> Loading…</div>
 
@@ -791,7 +813,7 @@ function starsHTML(n) {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
-function render() { renderSidebar(); renderPods(); renderStats(); }
+function render() { renderSidebar(); renderPods(); renderStats(); renderMobile(); }
 
 function renderStats() {
   const pods = allPods();
@@ -1086,83 +1108,106 @@ function updatePicker(pickerId, val, attr) {
   });
 }
 
-window.setFilter = f => { currentFilter = f; render(); updateMobLabel(); };
+window.setFilter = f => { currentFilter = f; render(); };
 document.getElementById("search").oninput = e => { searchQuery = e.target.value; renderPods(); };
 document.getElementById("sort").onchange  = e => { currentSort = e.target.value; renderPods(); };
 document.getElementById("vg").onclick = () => { currentView="grid"; document.getElementById("vg").classList.add("active"); document.getElementById("vl").classList.remove("active"); renderPods(); };
 document.getElementById("vl").onclick = () => { currentView="list"; document.getElementById("vl").classList.add("active"); document.getElementById("vg").classList.remove("active"); renderPods(); };
 
 
-// ── Mobile filter sheet ────────────────────────────────────────────────────
-function openSheet() {
-  renderSheet();
-  document.getElementById("sheet-overlay").classList.add("open");
-}
-function closeSheet() {
-  document.getElementById("sheet-overlay").classList.remove("open");
-}
+// ── Mobile rendering ──────────────────────────────────────────────────────
+let mobTab = "all";
+let mobRoastFilter = "";
 
-function renderSheet() {
-  const pods = allPods();
-  const cnt = f => {
-    if (f==="all")      return pods.length;
-    if (f==="tried")    return pods.filter(p=>ratings[p.id]).length;
-    if (f==="untried")  return pods.filter(p=>!ratings[p.id]).length;
-    if (f==="seasonal") return pods.filter(p=>p.seasonal||p.roast==="seasonal").length;
-    if (f==="custom")   return Object.keys(customPods).length;
-    if (f.startsWith("roast:"))  return pods.filter(p=>p.roast===f.slice(6)).length;
-    if (f.startsWith("size:"))   return pods.filter(p=>p.size===f.slice(5)).length;
-    if (f.startsWith("rated:"))  return pods.filter(p=>ratings[p.id]?.rating==parseInt(f.slice(6))).length;
-    return 0;
-  };
+function isMobile() { return window.innerWidth <= 680; }
 
-  const btn = (f, label, dot) => {
-    const active = currentFilter === f;
-    return `<button class="sheet-btn${active?" active":""}" onclick="sheetFilter('${f}')">
-      ${dot ? `<span class="fd" style="background:${dot};width:10px;height:10px;border-radius:50%;flex-shrink:0"></span>` : ""}
-      ${label}
-      <span class="sheet-count">${cnt(f)}</span>
-    </button>`;
-  };
-
-  document.getElementById("sheet-content").innerHTML = `
-    <div class="sheet-title">Status</div>
-    ${btn("all","All pods")}
-    ${btn("tried","Tried")}
-    ${btn("untried","Not tried yet")}
-    <div class="sheet-sep"></div>
-    <div class="sheet-title">Roast</div>
-    ${["medium","light","dark","flavoured","decaf","seasonal"].map(r => btn("roast:"+r, ROAST[r].label, ROAST[r].dot)).join("")}
-    <div class="sheet-sep"></div>
-    <div class="sheet-title">Cup size</div>
-    ${SIZE_ORDER.map(s => btn("size:"+s, s.split(" (")[0])).join("")}
-    <div class="sheet-sep"></div>
-    <div class="sheet-title">My ratings</div>
-    ${[5,4,3,2,1].map(n => btn("rated:"+n, "★".repeat(n)+"☆".repeat(5-n))).join("")}
-    <div class="sheet-sep"></div>
-    ${btn("custom","My additions", ROAST.custom.dot)}
-  `;
+function renderMobile() {
+  if (!isMobile()) return;
+  renderMobPills();
+  renderMobGrid();
 }
 
-window.sheetFilter = f => {
-  setFilter(f);
-  closeSheet();
-  updateMobLabel();
+function renderMobPills() {
+  const pills = [
+    { f:"",                            label:"All" },
+    { f:"roast:medium",                label:"Medium" },
+    { f:"roast:light",                 label:"Light" },
+    { f:"roast:dark",                  label:"Dark" },
+    { f:"roast:flavoured",             label:"Flavoured" },
+    { f:"roast:decaf",                 label:"Decaf" },
+    { f:"roast:seasonal",              label:"Seasonal / LE" },
+    { f:"size:Espresso (40ml)",        label:"Espresso" },
+    { f:"size:Double Espresso (80ml)", label:"Double Espresso" },
+    { f:"size:Gran Lungo (150ml)",     label:"Gran Lungo" },
+    { f:"size:Mug (230ml)",            label:"Mug" },
+    { f:"size:Alto XL (355ml)",        label:"Alto XL" },
+  ];
+  const el = document.getElementById("mob-filters");
+  if (el) el.innerHTML = pills.map(p =>
+    `<button class="mob-pill${mobRoastFilter===p.f?" active":""}" onclick="setMobPill('${p.f}')">${p.label}</button>`
+  ).join("");
+}
+
+function getMobPods() {
+  let pods = allPods().filter(p => {
+    if (mobTab === "tried")   return !!ratings[p.id];
+    if (mobTab === "untried") return !ratings[p.id];
+    return true;
+  }).filter(p => {
+    if (!mobRoastFilter) return true;
+    if (mobRoastFilter.startsWith("roast:")) return p.roast === mobRoastFilter.slice(6);
+    if (mobRoastFilter.startsWith("size:"))  return p.size  === mobRoastFilter.slice(5);
+    return true;
+  });
+  pods.sort((a,b) => {
+    const ra = ratings[a.id]?.rating||0, rb = ratings[b.id]?.rating||0;
+    if (rb !== ra) return rb - ra;
+    return a.name.localeCompare(b.name);
+  });
+  return pods;
+}
+
+function renderMobGrid() {
+  const pods = getMobPods();
+  const cont = document.getElementById("mob-grid");
+  if (!cont) return;
+  if (!pods.length) {
+    cont.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:#7a6a57">
+      <div style="font-size:2rem;opacity:0.2;margin-bottom:0.75rem">☕</div>
+      <div style="font-size:14px">No pods found</div>
+    </div>`;
+    return;
+  }
+  cont.innerHTML = pods.map(pod => {
+    const r = ratings[pod.id];
+    const ro = ROAST[pod.roast] || ROAST.custom;
+    return `
+      <div class="mob-card" onclick="openRateModal('${pod.id}')">
+        <div class="mob-card-top" style="background:${ro.top}">
+          <span class="mob-card-icon">${ro.icon}</span>
+          ${pod.seasonal ? `<span class="mob-ltd">LE</span>` : ""}
+        </div>
+        <div class="mob-card-body">
+          <div class="mob-size-tag" style="background:${ro.bg};color:${ro.text}">${pod.size.split(" (")[0]}</div>
+          <div class="mob-name">${pod.name}</div>
+          <div class="mob-desc">${pod.intensity ? "Intensity " + pod.intensity : pod.desc.split(",")[0]}</div>
+          <div class="mob-stars stars">${starsHTML(r?.rating||0)}</div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+window.setMobTab = t => {
+  mobTab = t;
+  document.querySelectorAll(".mob-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === t));
+  renderMobGrid();
 };
 
-function updateMobLabel() {
-  const el = document.getElementById("mob-active-label");
-  if (!el) return;
-  const labels = {
-    "all":"All pods","tried":"Tried","untried":"Not tried yet",
-    "seasonal":"Seasonal","custom":"My additions"
-  };
-  let label = labels[currentFilter];
-  if (!label && currentFilter.startsWith("roast:"))  label = ROAST[currentFilter.slice(6)]?.label || currentFilter.slice(6);
-  if (!label && currentFilter.startsWith("size:"))   label = currentFilter.slice(5).split(" (")[0];
-  if (!label && currentFilter.startsWith("rated:"))  label = "★".repeat(parseInt(currentFilter.slice(6)));
-  el.textContent = label || "All pods";
-}
+window.setMobPill = f => {
+  mobRoastFilter = f;
+  renderMobPills();
+  renderMobGrid();
+};
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -1170,32 +1215,6 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2200);
 }
 </script>
-
-<!-- Mobile bottom bar -->
-<div class="mob-bar">
-  <div class="mob-bar-inner">
-    <button class="mob-filter-btn" onclick="openSheet()">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <line x1="1" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="1" y1="9" x2="13" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <circle cx="4" cy="4" r="2" fill="#1c1410" stroke="currentColor" stroke-width="1.5"/>
-        <circle cx="10" cy="9" r="2" fill="#1c1410" stroke="currentColor" stroke-width="1.5"/>
-      </svg>
-      Filter
-    </button>
-    <span class="mob-active-filter" id="mob-active-label">All pods</span>
-    <button class="mob-add-btn" onclick="openAddModal()" aria-label="Add a pod">+</button>
-  </div>
-</div>
-
-<!-- Filter sheet -->
-<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()">
-  <div class="sheet" onclick="event.stopPropagation()">
-    <div class="sheet-handle"></div>
-    <div id="sheet-content"></div>
-    <div style="height:12px"></div>
-  </div>
-</div>
 
 </body>
 </html>
